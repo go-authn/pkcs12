@@ -38,8 +38,8 @@ func preflightKey(der []byte, maxBits int) error {
 		E       int
 		D       *big.Int
 		P, Q    *big.Int
-		Dp, Dq  *big.Int
-		Qinv    *big.Int
+		Dp, Dq  *big.Int        `asn1:"optional"` // RFC 8017 requires the CRT values;
+		Qinv    *big.Int        `asn1:"optional"` // crypto/x509 reads a key without them
 		Extra   []asn1.RawValue `asn1:"optional,omitempty"`
 	}
 	if _, err := asn1.Unmarshal(p8.PrivateKey, &k); err != nil {
@@ -49,7 +49,7 @@ func preflightKey(der []byte, maxBits int) error {
 		return unsupported("multi-prime RSA key")
 	}
 	for _, v := range []*big.Int{k.N, k.D, k.P, k.Q, k.Dp, k.Dq, k.Qinv} {
-		if v.Sign() <= 0 {
+		if v != nil && v.Sign() <= 0 {
 			return malformed("RSA private key: a number is not positive")
 		}
 	}
@@ -59,8 +59,11 @@ func preflightKey(der []byte, maxBits int) error {
 	}
 	// P x Q = N, so the two factors together are n or n+1 bits long, and every
 	// other number is reduced modulo N, P or Q.
+	// A CRT value that is absent costs nothing: the library derives it, from
+	// numbers already bounded here.
+	longer := func(v, bound *big.Int) bool { return v != nil && v.BitLen() > bound.BitLen() }
 	if k.P.BitLen()+k.Q.BitLen() > n+1 || k.D.BitLen() > n ||
-		k.Dp.BitLen() > k.P.BitLen() || k.Dq.BitLen() > k.Q.BitLen() || k.Qinv.BitLen() > k.P.BitLen() {
+		longer(k.Dp, k.P) || longer(k.Dq, k.Q) || longer(k.Qinv, k.P) {
 		return malformed("RSA private key: a number is longer than the modulus allows")
 	}
 	return nil

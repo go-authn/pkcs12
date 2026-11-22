@@ -51,12 +51,25 @@ func (c *calls) want(t *testing.T, certs, keys int) {
 // be without exceeding limit bytes, made of thousands of the shortest URI names
 // (5 bytes each), the shape on which crypto/x509 allocates most per byte.
 func bigCert(t testing.TB, limit int) []byte {
+	return uriCert(t, limit, func(i int) *url.URL {
+		return &url.URL{Scheme: "a", Opaque: string(rune('a' + i%26))}
+	})
+}
+
+// tinyCert is bigCert with names of 2 bytes ("a:"), the densest the standard
+// library accepts: the external review's worst case, about 8 100 names.
+func tinyCert(t testing.TB, limit int) []byte {
+	u := &url.URL{Scheme: "a"}
+	return uriCert(t, limit, func(int) *url.URL { return u })
+}
+
+func uriCert(t testing.TB, limit int, name func(i int) *url.URL) []byte {
 	t.Helper()
 	material(t)
 	build := func(n int) []byte {
 		uris := make([]*url.URL, n)
 		for i := range uris {
-			uris[i] = &url.URL{Scheme: "a", Opaque: string(rune('a' + i%26))}
+			uris[i] = name(i)
 		}
 		tmpl := &x509.Certificate{
 			SerialNumber: big.NewInt(1),
@@ -177,8 +190,9 @@ func TestLargeValidCertificateDecodes(t *testing.T) {
 }
 
 // maxCertRatio is what crypto/x509 itself costs for a certificate of tiny
-// names: 36x of the file here (names of 5 bytes), 48 to 52x in the external
-// review's probe (20 000 names). It cannot be lowered from outside, which is
+// names: 36x of the file for names of 5 bytes, 43x (47x layered) for names of
+// 2 bytes (TestWorstCaseFamily), 48 to 52x in the external review's first
+// probe (20 000 names, since refused). It cannot be lowered from outside, which is
 // why the absolute bytes handed to it are bounded instead.
 const maxCertRatio = 64.0
 

@@ -58,15 +58,24 @@ field can switch a bound off**. A refusal wraps `ErrLimit`, before the work.
 | `MaxCertBytes` | 512 KiB | DER of all certificates together (a chain is 4 to 16 KiB, a bundle of every public root about 200 KiB) |
 | `MaxRSABits` | 8192 | RSA modulus, and with it every number of the key (`crypto/rsa` has no upper limit; OpenSSL stops at 16384; real keys are 2048 to 4096) |
 
-`crypto/x509` allocates up to 36 to 52 times a certificate's size when it is
+`crypto/x509` allocates up to 43 to 52 times a certificate's size when it is
 made of thousands of tiny names, and `crypto/rsa` validates a key by arithmetic
 on the numbers it declares, so factors far longer than the modulus cost
 superlinear CPU. Neither can be fixed from outside, so what reaches them is
 bounded first: certificates by the two sizes above, and every PKCS#8 key (32 KiB
 at most) is read with `encoding/asn1` and refused, typed, when its modulus
 exceeds `MaxRSABits`, a factor or exponent is longer than the modulus allows, a
-number is not positive, or it is multi-prime (`ErrUnsupported`). EC, Ed25519 and
-X25519 keys cost one scalar multiplication whatever they declare.
+number is not positive, or it is multi-prime (`ErrUnsupported`). An RSA key
+without the CRT values (`Dp`, `Dq`, `Qinv`), which RFC 8017 requires but
+`crypto/x509` reads by deriving them, is accepted: they cost nothing once the
+modulus is capped. EC, Ed25519 and X25519 keys cost one scalar multiplication
+whatever they declare.
+
+**Memory per request.** With the default options, a hostile file makes one
+`Decode` allocate about 25 MB (measured: 24.8 MB, of which about 20 MB stay
+live until it returns) for a file of 525 KB. A service decoding uploads should
+cap the decodes in flight, for instance with a semaphore, and lower
+`MaxCertBytes` if it expects only short chains.
 
 Salts over 512 bytes and passwords over 1024 characters are refused. Every
 length field is checked against the bytes actually present before anything is
@@ -95,9 +104,10 @@ invariant.
   nested OCTET STRING chains, unauthenticated ciphertext and 4 GiB length
   claims, and bounds allocated bytes over input bytes: worst ratio 8.6 on
   those, which are refused. A second set **decodes successfully**: certificates
-  of tiny names up to the cap, and a chain of them filling `MaxCertBytes`
-  (**worst ratio 36 of the file, 17.7 MB allocated for a 492 KB file**, the
-  cost of `crypto/x509` itself), and real RSA keys of 2048 and 4096 bits (17
+  of tiny names up to the cap, and sixteen of the densest (names of 2 bytes)
+  filling `MaxCertBytes`, plain and inside an encrypted constructed authSafe
+  (**worst ratio 43 of the file plain, 47 layered, 24.8 MB allocated for a
+  525 KB file**, the cost of `crypto/x509` itself), and real RSA keys of 2048 and 4096 bits (17
   at most, 63 KB). The tests assert the absolute bound too (64 x `MaxCertBytes`,
   32 MiB for any file) and that the refusals above happen **before**
   `crypto/x509` is called, by counting its calls.

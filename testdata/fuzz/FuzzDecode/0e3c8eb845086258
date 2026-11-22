@@ -1,0 +1,5 @@
+go test fuzz v1
+[]byte("0")
+string("\xe1\xb80")
+bool(false)
+bool(false)

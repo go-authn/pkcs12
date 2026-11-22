@@ -1,0 +1,5 @@
+go test fuzz v1
+[]byte("0")
+string("חބǋ\xc20")
+bool(false)
+bool(false)

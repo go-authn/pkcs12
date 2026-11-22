@@ -34,23 +34,25 @@ func TestRC2Vectors(t *testing.T) {
 		{"88bca90e90875a7f0f79c384627bafb216f80a6f85920584c42fceb0be255daf1e", 129, "0000000000000000", "5b78d3a43dfff1f1"},
 	} {
 		t.Run(v.key[:2]+"/"+v.ct, func(t *testing.T) {
-			c, err := newRC2(unhex(t, v.key), v.bits)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if c.BlockSize() != 8 {
-				t.Fatalf("block size %d", c.BlockSize())
-			}
-			pt, ct := unhex(t, v.pt), unhex(t, v.ct)
-			got := make([]byte, 8)
-			c.Encrypt(got, pt)
-			if !bytes.Equal(got, ct) {
-				t.Fatalf("encrypt %x, want %x", got, ct)
-			}
-			c.Decrypt(got, ct)
-			if !bytes.Equal(got, pt) {
-				t.Fatalf("decrypt %x, want %x", got, pt)
-			}
+			safely(t, func() {
+				c, err := newRC2(unhex(t, v.key), v.bits)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if c.BlockSize() != 8 {
+					t.Fatalf("block size %d", c.BlockSize())
+				}
+				pt, ct := unhex(t, v.pt), unhex(t, v.ct)
+				got := make([]byte, 8)
+				c.Encrypt(got, pt)
+				if !bytes.Equal(got, ct) {
+					t.Fatalf("encrypt %x, want %x", got, ct)
+				}
+				c.Decrypt(got, ct)
+				if !bytes.Equal(got, pt) {
+					t.Fatalf("decrypt %x, want %x", got, pt)
+				}
+			})
 		})
 	}
 }
@@ -71,32 +73,36 @@ func TestRC2KeySizes(t *testing.T) {
 // Vectors from golang.org/x/crypto/pkcs12 (BSD-3, Go Authors), through
 // SSLMate/go-pkcs12's copy of its tests.
 func TestPKCS12KDFVectors(t *testing.T) {
-	got := pkcs12KDF(specSHA1.new, 20, 64, bytes.Repeat([]byte{0xff}, 8), bmpPassword("sesame"), 2048, 1, 24)
-	want := unhex(t, "7cd9fd3e2b3be7691a44e3bef0f9ea0fb9b897d4e325d9d1")
-	if !bytes.Equal(got, want) {
-		t.Fatalf("long key: %x, want %x", got, want)
-	}
-	// I_j with a leading zero byte after step 6C.
-	got = pkcs12KDF(specSHA1.new, 20, 64, unhex(t, "f37e05b518324b4b"), []byte{0, 0}, 2048, 1, 24)
-	want = unhex(t, "00f759ff47d14dd03665d5943cb3c4a39a2555c02aed66e1")
-	if !bytes.Equal(got, want) {
-		t.Fatalf("leading zeros: %x, want %x", got, want)
-	}
+	safely(t, func() {
+		got := pkcs12KDF(specSHA1.new, 20, 64, bytes.Repeat([]byte{0xff}, 8), bmpPassword("sesame"), 2048, 1, 24)
+		want := unhex(t, "7cd9fd3e2b3be7691a44e3bef0f9ea0fb9b897d4e325d9d1")
+		if !bytes.Equal(got, want) {
+			t.Fatalf("long key: %x, want %x", got, want)
+		}
+		// I_j with a leading zero byte after step 6C.
+		got = pkcs12KDF(specSHA1.new, 20, 64, unhex(t, "f37e05b518324b4b"), []byte{0, 0}, 2048, 1, 24)
+		want = unhex(t, "00f759ff47d14dd03665d5943cb3c4a39a2555c02aed66e1")
+		if !bytes.Equal(got, want) {
+			t.Fatalf("leading zeros: %x, want %x", got, want)
+		}
+	})
 }
 
 func TestKDFEmptyInputs(t *testing.T) {
-	// No salt and no password: I is empty, the derivation still runs.
-	a := pkcs12KDF(specSHA256.new, 32, 64, nil, nil, 2, 3, 40)
-	b := pkcs12KDF(specSHA256.new, 32, 64, nil, nil, 2, 3, 40)
-	if len(a) != 40 || !bytes.Equal(a, b) {
-		t.Fatal("empty derivation is not deterministic or the wrong length")
-	}
-	if stretch(nil, 64) != nil {
-		t.Fatal("stretch(nil) is not nil")
-	}
-	if s := stretch([]byte{1, 2, 3}, 4); !bytes.Equal(s, []byte{1, 2, 3, 1}) {
-		t.Fatalf("stretch = %v", s)
-	}
+	safely(t, func() {
+		// No salt and no password: I is empty, the derivation still runs.
+		a := pkcs12KDF(specSHA256.new, 32, 64, nil, nil, 2, 3, 40)
+		b := pkcs12KDF(specSHA256.new, 32, 64, nil, nil, 2, 3, 40)
+		if len(a) != 40 || !bytes.Equal(a, b) {
+			t.Fatal("empty derivation is not deterministic or the wrong length")
+		}
+		if stretch(nil, 64) != nil {
+			t.Fatal("stretch(nil) is not nil")
+		}
+		if s := stretch([]byte{1, 2, 3}, 4); !bytes.Equal(s, []byte{1, 2, 3, 1}) {
+			t.Fatalf("stretch = %v", s)
+		}
+	})
 }
 
 func TestBMPPassword(t *testing.T) {
@@ -163,9 +169,11 @@ func TestOIDString(t *testing.T) {
 }
 
 func TestMustOIDLargeArc(t *testing.T) {
-	if got := hex.EncodeToString(mustOID(1, 2, 840, 113549)); got != "2a864886f70d" {
-		t.Fatalf("got %s", got)
-	}
+	safely(t, func() {
+		if got := hex.EncodeToString(mustOID(1, 2, 840, 113549)); got != "2a864886f70d" {
+			t.Fatalf("got %s", got)
+		}
+	})
 }
 
 func TestHashTables(t *testing.T) {

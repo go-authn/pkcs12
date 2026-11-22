@@ -187,7 +187,10 @@ func fileOf(pw string, cis ...[]byte) []byte {
 
 // safely runs f and turns a panic into a named failure. A refusal test that
 // lets a panic through goes red whatever guard was removed, so it holds none:
-// the sweep reports that as luck.
+// the sweep reports that as luck. For the same reason the files whose tests
+// all run through safely are named aaa_*_test.go: they run FIRST, so a removed
+// guard fails one of them by assertion before an unprotected test can panic
+// and take the whole test binary down.
 func safely(t *testing.T, f func()) {
 	t.Helper()
 	defer func() {

@@ -2,6 +2,7 @@ package pkcs12
 
 import (
 	"bytes"
+	"math/bits"
 	"strconv"
 )
 
@@ -11,15 +12,16 @@ import (
 func mustOID(arcs ...uint64) []byte {
 	out := []byte{byte(arcs[0]*40 + arcs[1])}
 	for _, a := range arcs[2:] {
-		var tmp [10]byte
-		i := len(tmp)
-		i--
-		tmp[i] = byte(a & 0x7f)
-		for a >>= 7; a > 0; a >>= 7 {
-			i--
-			tmp[i] = byte(a&0x7f) | 0x80
+		// Base 128, most significant group first, every group but the last
+		// carrying the continuation bit.
+		groups := (bits.Len64(a|1) + 6) / 7
+		for k := groups - 1; k >= 0; k-- {
+			g := byte(a>>(7*uint(k))) & 0x7f
+			if k > 0 {
+				g |= 0x80
+			}
+			out = append(out, g)
 		}
-		out = append(out, tmp[i:]...)
 	}
 	return out
 }

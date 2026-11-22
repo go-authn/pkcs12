@@ -33,6 +33,10 @@ func TestReadElemRefusals(t *testing.T) {
 		{"indefinite primitive", []byte{0x04, 0x80, 0, 0}, ErrMalformed, "primitive"},
 		{"indefinite unterminated", []byte{0x30, 0x80, 0x04, 0x01, 0x41}, ErrMalformed, "truncated"},
 		{"nesting too deep", deep(5), ErrLimit, "deeper than 3"},
+		{"nesting one past the limit", deep(4), ErrLimit, "deeper than 3"},
+		// A complete element that is not an end-of-contents, then nothing: the
+		// two bytes left are 05 00, which must not be mistaken for 00 00.
+		{"indefinite ended by a two-byte element", []byte{0x30, 0x80, 0x05, 0x00}, ErrMalformed, "truncated"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var err error
@@ -40,6 +44,16 @@ func TestReadElemRefusals(t *testing.T) {
 			wantErr(t, err, tc.want, tc.msg)
 		})
 	}
+}
+
+// TestReadElemDepthAtTheLimit: nesting exactly at MaxDepth is read.
+func TestReadElemDepthAtTheLimit(t *testing.T) {
+	in := []byte{0x30, 0x80, 0x30, 0x80, 0x30, 0x80, 0, 0, 0, 0, 0, 0}
+	safely(t, func() {
+		if _, _, err := readElem(in, 0, 3); err != nil {
+			t.Fatalf("three levels with a limit of 3: %v", err)
+		}
+	})
 }
 
 func TestReadElemForms(t *testing.T) {

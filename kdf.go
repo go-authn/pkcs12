@@ -26,7 +26,7 @@ func pkcs12KDF(newHash func() hash.Hash, u, v int, salt, password []byte, iter i
 	out := make([]byte, 0, n+u)
 	a := make([]byte, 0, u)
 	b := make([]byte, v)
-	for len(out) < n { // 5. c = ceil(n/u) rounds
+	for { // 5. c = ceil(n/u) rounds; n >= 1, so the first round always runs
 		// 6A. A = H^r(D || I)
 		h.Reset()
 		h.Write(d)

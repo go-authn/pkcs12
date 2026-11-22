@@ -76,6 +76,17 @@ jobs:
           go test -count=1 -covermode=set -coverprofile=cover.out ./...
           go run github.com/go-fleettools/fleettools/cmd/covblocks@latest --max 0 cover.out
 
+  # The reference decoder (sslmate) and OpenSSL, in a module of their own so
+  # the library never depends on them.
+  oracle:
+    name: differential (sslmate, openssl)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version-file: go.mod, check-latest: true, cache: true }
+      - run: cd oracle && go test -count=1 -v ./...
+
   govulncheck:
     runs-on: ubuntu-latest
     steps:

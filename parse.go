@@ -137,10 +137,9 @@ func (s *state) safeBag(bags *cursor, pw passwordForm) {
 		bag.take(classUniversal, tagSet, true, "bag attributes")
 	}
 	bag.end("SafeBag")
-	if *bags.err != nil {
-		return
-	}
 
+	// The error slot is shared and sticky: a bag that failed above fills it,
+	// every cursor call below is then a no-op, and no case can add to s.
 	switch {
 	case oidIs(id, oidCertBag):
 		cb := val.seq("CertBag")

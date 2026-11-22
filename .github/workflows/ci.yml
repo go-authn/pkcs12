@@ -1,0 +1,136 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GOWORK: "off"
+  CGO_ENABLED: "0"
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          check-latest: true
+          cache: true
+      # ⛔ The judge is OpenSSL's pkcs12 command. On Ubuntu it is REQUIRED: a
+      # lane where it is missing fails instead of skipping, because an oracle
+      # that quietly does not run reports a clean pass. macOS ships LibreSSL as
+      # /usr/bin/openssl, and Windows has none, so there the committed
+      # fixtures — themselves made by OpenSSL — are what is checked.
+      - name: OpenSSL is the judge on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          openssl version
+          echo "PKCS12_REQUIRE_OPENSSL=1" >> "$GITHUB_ENV"
+      - run: go vet ./...
+      - name: gofmt
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          unformatted=$(gofmt -l $(git ls-files '*.go'))
+          if [ -n "$unformatted" ]; then
+            echo "::error::these files are not gofmt-clean:"; echo "$unformatted"; exit 1
+          fi
+      - run: go test -count=1 -v ./...
+
+  race:
+    name: race detector
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version-file: go.mod, check-latest: true, cache: true }
+      - run: go test -race -count=1 ./...
+
+  # ⛔ BY BLOCK, NOT BY PERCENTAGE. `go test -cover` rounds: one uncovered
+  # block in a few thousand still prints 100.0%, and that rounding once hid a
+  # test that had stopped reaching the branch it was written for. covblocks
+  # counts blocks and allows none.
+  coverage:
+    name: coverage (every block)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version-file: go.mod, check-latest: true, cache: true }
+      - run: |
+          go test -count=1 -covermode=set -coverprofile=cover.out ./...
+          go run github.com/go-fleettools/fleettools/cmd/covblocks@latest --max 0 cover.out
+
+  # The reference decoder (sslmate) and OpenSSL, in a module of their own so
+  # the library never depends on them.
+  oracle:
+    name: differential (sslmate, openssl)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version-file: go.mod, check-latest: true, cache: true }
+      - run: cd oracle && go test -count=1 -v ./...
+
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version-file: go.mod, check-latest: true, cache: true }
+      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+  # Parsing is byte-for-byte and integer widths matter in a decoder, so every
+  # architecture the organisation targets runs the suite, the 32-bit ones
+  # included.
+  arches:
+    name: arch ${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        goarch: [amd64, arm64, 386, arm, riscv64, s390x]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with: { go-version-file: go.mod, check-latest: true, cache: true }
+      - run: GOARCH=${{ matrix.goarch }} go vet ./...
+      - name: install qemu user-mode emulators
+        if: matrix.goarch != 'amd64' && matrix.goarch != '386'
+        timeout-minutes: 10
+        run: sudo apt-get update && sudo apt-get install -y qemu-user qemu-user-binfmt
+      - name: Test
+        run: |
+          # ⛔ Resolve the emulator and FAIL when there is none: a lane that
+          # reports success for an architecture it never ran is the one outcome
+          # this matrix exists to rule out.
+          qemu_for() {
+            for cand in "qemu-$1-static" "qemu-$1"; do
+              command -v "$cand" >/dev/null 2>&1 && { printf '%s\n' "$cand"; return 0; }
+            done
+            echo "::error::no qemu user emulator for $1" >&2
+            return 1
+          }
+          case "${{ matrix.goarch }}" in
+            amd64) go test -count=1 ./... ;;
+            386) GOARCH=386 go test -count=1 ./... ;;
+            arm64) e="$(qemu_for aarch64)" || exit 1; GOARCH=arm64 go test -count=1 -exec="$e" ./... ;;
+            arm) e="$(qemu_for arm)" || exit 1; GOARCH=arm go test -count=1 -exec="$e" ./... ;;
+            riscv64) e="$(qemu_for riscv64)" || exit 1; GOARCH=riscv64 go test -count=1 -exec="$e" ./... ;;
+            s390x) e="$(qemu_for s390x)" || exit 1; GOARCH=s390x go test -count=1 -exec="$e" ./... ;;
+          esac

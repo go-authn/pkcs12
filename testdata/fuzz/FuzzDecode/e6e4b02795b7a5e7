@@ -1,0 +1,5 @@
+go test fuzz v1
+[]byte("0")
+string("0000000000\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t0000000\x00\x00\x00\x7f00000")
+bool(false)
+bool(false)

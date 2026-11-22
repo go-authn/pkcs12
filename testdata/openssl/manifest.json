@@ -1,0 +1,350 @@
+[
+  {
+    "name": "rsa-default",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": null
+  },
+  {
+    "name": "ec-default",
+    "password": "correct horse battery",
+    "key": "ecdsa",
+    "pub_sha256": "40ba23e902c0f245abfd8bf6823a54465b55e65a53c15c738b5795e1b30209de",
+    "leaf_sha256": "3060796541f578a195e7cb94c02a1d7cc6a364469b74407c812000cf5691ed5d",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": null
+  },
+  {
+    "name": "ed25519-default",
+    "password": "correct horse battery",
+    "key": "ed25519",
+    "pub_sha256": "53552f7dfd0a2f5ac99dc32c3eece181afb6e4e09b808c4b69885163882441f3",
+    "leaf_sha256": "560f5d7f9467f838a8710217add3fe4e556a8a233364be543db5374da18ee6c7",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": null
+  },
+  {
+    "name": "rsa-nochain",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": null,
+    "flags": null
+  },
+  {
+    "name": "rsa-legacy",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-legacy"
+    ]
+  },
+  {
+    "name": "rsa-descert",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-descert"
+    ]
+  },
+  {
+    "name": "rsa-aes128",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-keypbe",
+      "AES-128-CBC",
+      "-certpbe",
+      "AES-128-CBC"
+    ]
+  },
+  {
+    "name": "rsa-aes192",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-keypbe",
+      "AES-192-CBC",
+      "-certpbe",
+      "AES-192-CBC"
+    ]
+  },
+  {
+    "name": "rsa-pbe-rc2-40",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-provider",
+      "legacy",
+      "-provider",
+      "default",
+      "-keypbe",
+      "PBE-SHA1-3DES",
+      "-certpbe",
+      "PBE-SHA1-RC2-40"
+    ]
+  },
+  {
+    "name": "rsa-pbe-rc2-128",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-provider",
+      "legacy",
+      "-provider",
+      "default",
+      "-keypbe",
+      "PBE-SHA1-2DES",
+      "-certpbe",
+      "PBE-SHA1-RC2-128"
+    ]
+  },
+  {
+    "name": "rsa-mac-sha1",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-macalg",
+      "sha1"
+    ]
+  },
+  {
+    "name": "rsa-mac-sha384",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-macalg",
+      "sha384"
+    ]
+  },
+  {
+    "name": "rsa-mac-sha512",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-macalg",
+      "sha512"
+    ]
+  },
+  {
+    "name": "rsa-nomac",
+    "password": "correct horse battery",
+    "allow_no_mac": true,
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-nomac"
+    ]
+  },
+  {
+    "name": "rsa-pbmac1",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-pbmac1_pbkdf2"
+    ],
+    "needs": "3.4"
+  },
+  {
+    "name": "rsa-pbmac1-sha512",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-pbmac1_pbkdf2",
+      "-pbmac1_pbkdf2_md",
+      "sha512"
+    ],
+    "needs": "3.4"
+  },
+  {
+    "name": "rsa-iter-1",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-iter",
+      "1",
+      "-macalg",
+      "sha256"
+    ]
+  },
+  {
+    "name": "rsa-iter-100000",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-iter",
+      "100000"
+    ]
+  },
+  {
+    "name": "rsa-empty-password",
+    "password": "",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": null
+  },
+  {
+    "name": "rsa-unicode-password",
+    "password": "pässwörd-日本語-😀",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": null
+  },
+  {
+    "name": "rsa-unicode-password-legacy",
+    "password": "pässwörd-日本語-😀",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-legacy"
+    ]
+  },
+  {
+    "name": "rsa-plain-mac",
+    "password": "correct horse battery",
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-keypbe",
+      "NONE",
+      "-certpbe",
+      "NONE"
+    ]
+  },
+  {
+    "name": "rsa-plain-nomac-nopassword",
+    "password": "",
+    "no_password": true,
+    "allow_no_mac": true,
+    "key": "rsa",
+    "pub_sha256": "3c626bdeffb6a1f4ca59c632fe1d34ebf2ca95f919e2bbb5a6f20ab2f0a86115",
+    "leaf_sha256": "fb806b8378d96ebf0a3c3d39cc4abbe7c16e094d9e5f1358f99a73c425cc69fa",
+    "ca_sha256": [
+      "23a9aaecab5524fb366ed2f45ab27eed7ac4d89f40af4d96d0d3a8214a89b2ec",
+      "bc68e52ac5c8692d2ccf5b09645f79795be49d8a39d61e10d9ae59ce848dfde3"
+    ],
+    "flags": [
+      "-keypbe",
+      "NONE",
+      "-certpbe",
+      "NONE",
+      "-nomac"
+    ]
+  }
+]

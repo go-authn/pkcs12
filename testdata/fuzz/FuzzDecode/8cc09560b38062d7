@@ -1,0 +1,5 @@
+go test fuzz v1
+[]byte("0\x800\x00")
+string("")
+bool(true)
+bool(true)

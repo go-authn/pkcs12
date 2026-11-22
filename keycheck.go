@@ -38,8 +38,8 @@ func preflightKey(der []byte, maxBits int) error {
 		E       int
 		D       *big.Int
 		P, Q    *big.Int
-		Dp, Dq  *big.Int        `asn1:"optional"` // RFC 8017 requires the CRT values;
-		Qinv    *big.Int        `asn1:"optional"` // crypto/x509 reads a key without them
+		Dp, Dq  *big.Int        `asn1:"optional"` // read, so that their absence is a typed
+		Qinv    *big.Int        `asn1:"optional"` // refusal, not an ASN.1 error
 		Extra   []asn1.RawValue `asn1:"optional,omitempty"`
 	}
 	if _, err := asn1.Unmarshal(p8.PrivateKey, &k); err != nil {
@@ -48,8 +48,15 @@ func preflightKey(der []byte, maxBits int) error {
 	if len(k.Extra) > 0 {
 		return unsupported("multi-prime RSA key")
 	}
+	// RFC 8017 requires Dp, Dq and Qinv, and every exporter writes them
+	// (OpenSSL, Windows, Java keytool). crypto/x509 reads a key without them
+	// but then derives them with big-number arithmetic: 16.4 MB and 21 744
+	// allocations for 8192 bits, against 0.36 MB and 618 with them.
+	if k.Dp == nil || k.Dq == nil || k.Qinv == nil {
+		return unsupported("RSA key without CRT values (Dp, Dq, Qinv)")
+	}
 	for _, v := range []*big.Int{k.N, k.D, k.P, k.Q, k.Dp, k.Dq, k.Qinv} {
-		if v != nil && v.Sign() <= 0 {
+		if v.Sign() <= 0 {
 			return malformed("RSA private key: a number is not positive")
 		}
 	}
@@ -59,11 +66,8 @@ func preflightKey(der []byte, maxBits int) error {
 	}
 	// P x Q = N, so the two factors together are n or n+1 bits long, and every
 	// other number is reduced modulo N, P or Q.
-	// A CRT value that is absent costs nothing: the library derives it, from
-	// numbers already bounded here.
-	longer := func(v, bound *big.Int) bool { return v != nil && v.BitLen() > bound.BitLen() }
 	if k.P.BitLen()+k.Q.BitLen() > n+1 || k.D.BitLen() > n ||
-		longer(k.Dp, k.P) || longer(k.Dq, k.Q) || longer(k.Qinv, k.P) {
+		k.Dp.BitLen() > k.P.BitLen() || k.Dq.BitLen() > k.Q.BitLen() || k.Qinv.BitLen() > k.P.BitLen() {
 		return malformed("RSA private key: a number is longer than the modulus allows")
 	}
 	return nil

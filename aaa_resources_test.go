@@ -66,6 +66,14 @@ func tinyCert(t testing.TB, limit int) []byte {
 func uriCert(t testing.TB, limit int, name func(i int) *url.URL) []byte {
 	t.Helper()
 	material(t)
+	return uriCertFor(t, limit, name, mat.priv.Public())
+}
+
+// uriCertFor certifies pub, signed by the material key (nothing verifies the
+// signature): the leaf that matches a private key under test.
+func uriCertFor(t testing.TB, limit int, name func(i int) *url.URL, pub crypto.PublicKey) []byte {
+	t.Helper()
+	material(t)
 	build := func(n int) []byte {
 		uris := make([]*url.URL, n)
 		for i := range uris {
@@ -78,7 +86,7 @@ func uriCert(t testing.TB, limit int, name func(i int) *url.URL) []byte {
 			NotAfter:     time.Unix(4_000_000_000, 0),
 			URIs:         uris,
 		}
-		der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, mat.priv.Public(), mat.priv)
+		der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, pub, mat.priv)
 		if err != nil {
 			t.Fatal(err)
 		}

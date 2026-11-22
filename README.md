@@ -65,15 +65,20 @@ superlinear CPU. Neither can be fixed from outside, so what reaches them is
 bounded first: certificates by the two sizes above, and every PKCS#8 key (32 KiB
 at most) is read with `encoding/asn1` and refused, typed, when its modulus
 exceeds `MaxRSABits`, a factor or exponent is longer than the modulus allows, a
-number is not positive, or it is multi-prime (`ErrUnsupported`). An RSA key
-without the CRT values (`Dp`, `Dq`, `Qinv`), which RFC 8017 requires but
-`crypto/x509` reads by deriving them, is accepted: they cost nothing once the
-modulus is capped. EC, Ed25519 and X25519 keys cost one scalar multiplication
-whatever they declare.
+number is not positive, or it is multi-prime (`ErrUnsupported`). EC, Ed25519
+and X25519 keys cost one scalar multiplication whatever they declare.
+
+**Known limitation: RSA keys without CRT values.** An RSA key lacking `Dp`,
+`Dq` and `Qinv` is refused (`ErrUnsupported`) before `crypto/x509` sees it.
+RFC 8017 requires them and every exporter writes them (OpenSSL, Windows, Java
+keytool), but `crypto/x509` reads such a key and derives them with big-number
+arithmetic: 16.4 MB and 21 744 allocations at 8192 bits, against 0.36 MB and 618
+with them, which with the worst certificates exceeds the bound asserted below.
 
 **Memory per request.** With the default options, a hostile file makes one
-`Decode` allocate about 25 MB (measured: 24.8 MB, of which about 20 MB stay
-live until it returns) for a file of 525 KB. A service decoding uploads should
+`Decode` allocate about 25 MB (measured jointly, worst certificates and the
+largest accepted key, 8192 bits: 25.1 MB, of which about 20 MB stay live until
+it returns) for a file of 530 KB. A service decoding uploads should
 cap the decodes in flight, for instance with a semaphore, and lower
 `MaxCertBytes` if it expects only short chains.
 
@@ -106,8 +111,9 @@ invariant.
   those, which are refused. A second set **decodes successfully**: certificates
   of tiny names up to the cap, and sixteen of the densest (names of 2 bytes)
   filling `MaxCertBytes`, plain and inside an encrypted constructed authSafe
-  (**worst ratio 43 of the file plain, 47 layered, 24.8 MB allocated for a
-  525 KB file**, the cost of `crypto/x509` itself), and real RSA keys of 2048 and 4096 bits (17
+  (**worst ratio 43 of the file plain, 47 layered; joint with the largest
+  accepted key, 8192 bits: 47.4 and 25.1 MB allocated for a 530 KB file**, the
+  cost of `crypto/x509` itself), and real RSA keys of 2048 and 4096 bits (17
   at most, 63 KB). The tests assert the absolute bound too (64 x `MaxCertBytes`,
   32 MiB for any file) and that the refusals above happen **before**
   `crypto/x509` is called, by counting its calls.

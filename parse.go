@@ -5,6 +5,13 @@ import (
 	"crypto/x509"
 )
 
+// The two crypto/x509 parsers whose cost the input can steer. They are
+// variables so that a test can prove a refusal happens before either is called.
+var (
+	parseCertificate = x509.ParseCertificate
+	parsePKCS8       = x509.ParsePKCS8PrivateKey
+)
+
 // decode is the structure of RFC 7292 section 4, top to bottom:
 //
 //	PFX ::= SEQUENCE { version INTEGER {v3(3)}, authSafe ContentInfo, macData MacData OPTIONAL }
@@ -149,7 +156,17 @@ func (s *state) safeBag(bags *cursor, pw passwordForm) {
 		if *bags.err != nil || !oidIs(cid, oidX509Certificate) {
 			return // an SDSI certificate is not an X.509 one: skipped
 		}
-		cert, err := x509.ParseCertificate(der)
+		// crypto/x509 allocates up to 50 times its input for a certificate of
+		// thousands of tiny names, so what it is handed is bounded first.
+		if len(der) > s.opts.MaxCertSize {
+			bags.fail(limit("certificate of %d bytes exceeds the limit of %d", len(der), s.opts.MaxCertSize))
+			return
+		}
+		if s.certBytes += len(der); s.certBytes > s.opts.MaxCertBytes {
+			bags.fail(limit("certificates exceed %d bytes in all", s.opts.MaxCertBytes))
+			return
+		}
+		cert, err := parseCertificate(der)
 		if err != nil {
 			bags.fail(malformed("certificate: %v", err))
 			return
@@ -180,7 +197,11 @@ func (s *state) setKey(der []byte, c *cursor) {
 		c.fail(ErrMultipleKeys)
 		return
 	}
-	key, err := x509.ParsePKCS8PrivateKey(der)
+	if err := preflightKey(der, s.opts.MaxRSABits); err != nil {
+		c.fail(err)
+		return
+	}
+	key, err := parsePKCS8(der)
 	if err != nil {
 		c.fail(malformed("private key: %v", err))
 		return

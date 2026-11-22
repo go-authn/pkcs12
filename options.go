@@ -9,8 +9,29 @@ const (
 	DefaultMaxDepth      = 16        // nested indefinite-length / constructed-string levels
 	DefaultMaxBags       = 1024      // SafeBags, over the whole file
 	DefaultMaxAuthSafes  = 32        // ContentInfos in the AuthenticatedSafe
-	maxSaltLen           = 512       // bytes, any KDF salt
-	maxPasswordRunes     = 1024
+	// DefaultMaxCertSize bounds one certificate's DER. Real certificates are
+	// 1 to 4 KiB, a 100-name multi-domain one about 8 KiB, and the largest
+	// seen in the wild 10 to 20 KiB; post-quantum ones (ML-DSA-87) are about
+	// 8 KiB. 32 KiB leaves room for all of them. The bound exists because
+	// crypto/x509 allocates 50 times the input for a certificate made of
+	// thousands of tiny names, and that factor cannot be removed from outside.
+	DefaultMaxCertSize = 32 << 10
+	// DefaultMaxCertBytes bounds all certificate DER of one file together. A
+	// leaf with its chain is 4 to 16 KiB; a bundle of every public root is
+	// about 200 KiB. 512 KiB holds that, and bounds what x509 can allocate for
+	// a hostile file to about 26 MB.
+	DefaultMaxCertBytes = 512 << 10
+	// DefaultMaxRSABits bounds an RSA modulus. Real keys are 2048 to 4096 bits.
+	// crypto/rsa itself sets no upper limit (it only refuses fewer than 1024
+	// bits unless GODEBUG says otherwise), and OpenSSL stops at 16384
+	// (OPENSSL_RSA_MAX_MODULUS_BITS); 8192 is twice the largest key in use.
+	DefaultMaxRSABits = 8192
+
+	maxSaltLen = 512 // bytes, any KDF salt
+	// maxKeyDER bounds a PKCS#8 private key of any type: an RSA key of 16384
+	// bits is under 10 KiB, an EC or Ed25519 key under 200 bytes.
+	maxKeyDER        = 32 << 10
+	maxPasswordRunes = 1024
 )
 
 // Options tunes Decode. The zero value, or a nil *Options, is the safe default.
@@ -39,6 +60,18 @@ type Options struct {
 
 	// MaxAuthSafes bounds the ContentInfos of the AuthenticatedSafe. Default 32.
 	MaxAuthSafes int
+
+	// MaxCertSize bounds the DER of one certificate, checked before
+	// crypto/x509 sees it. Default 32 KiB.
+	MaxCertSize int
+
+	// MaxCertBytes bounds the DER of all certificates of the file together,
+	// checked before crypto/x509 sees them. Default 512 KiB.
+	MaxCertBytes int
+
+	// MaxRSABits bounds the modulus of an RSA private key, and with it every
+	// number of the key, checked before crypto/x509 sees it. Default 8192.
+	MaxRSABits int
 
 	// AllowNoMAC lets Decode read a file that has no integrity MAC (made by
 	// `openssl pkcs12 -nomac`). Nothing then authenticates the content, and a
@@ -78,6 +111,15 @@ func (o *Options) resolve() Options {
 	}
 	if r.MaxAuthSafes <= 0 {
 		r.MaxAuthSafes = DefaultMaxAuthSafes
+	}
+	if r.MaxCertSize <= 0 {
+		r.MaxCertSize = DefaultMaxCertSize
+	}
+	if r.MaxCertBytes <= 0 {
+		r.MaxCertBytes = DefaultMaxCertBytes
+	}
+	if r.MaxRSABits <= 0 {
+		r.MaxRSABits = DefaultMaxRSABits
 	}
 	return r
 }

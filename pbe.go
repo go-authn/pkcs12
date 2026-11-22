@@ -17,6 +17,7 @@ type state struct {
 	authenticated bool // a MAC verified
 	decrypted     bool // something was handed to a cipher
 	bags          int
+	certBytes     int // DER handed to crypto/x509 so far
 	key           crypto.PrivateKey
 	certs         []*x509.Certificate
 }

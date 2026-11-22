@@ -54,6 +54,19 @@ field can switch a bound off**. A refusal wraps `ErrLimit`, before the work.
 | `MaxDepth` | 16 | BER nesting and constructed-string chunk nesting |
 | `MaxBags` | 1024 | SafeBags in the file |
 | `MaxAuthSafes` | 32 | ContentInfos in the AuthenticatedSafe |
+| `MaxCertSize` | 32 KiB | DER of one certificate, checked before `crypto/x509` sees it (real ones: 1 to 4 KiB, 10 to 20 KiB at the very most) |
+| `MaxCertBytes` | 512 KiB | DER of all certificates together (a chain is 4 to 16 KiB, a bundle of every public root about 200 KiB) |
+| `MaxRSABits` | 8192 | RSA modulus, and with it every number of the key (`crypto/rsa` has no upper limit; OpenSSL stops at 16384; real keys are 2048 to 4096) |
+
+`crypto/x509` allocates up to 36 to 52 times a certificate's size when it is
+made of thousands of tiny names, and `crypto/rsa` validates a key by arithmetic
+on the numbers it declares, so factors far longer than the modulus cost
+superlinear CPU. Neither can be fixed from outside, so what reaches them is
+bounded first: certificates by the two sizes above, and every PKCS#8 key (32 KiB
+at most) is read with `encoding/asn1` and refused, typed, when its modulus
+exceeds `MaxRSABits`, a factor or exponent is longer than the modulus allows, a
+number is not positive, or it is multi-prime (`ErrUnsupported`). EC, Ed25519 and
+X25519 keys cost one scalar multiplication whatever they declare.
 
 Salts over 512 bytes and passwords over 1024 characters are refused. Every
 length field is checked against the bytes actually present before anything is
@@ -80,9 +93,14 @@ invariant.
 - **Amplification.** `TestAmplification` sweeps 4 KiB to 4 MiB over many tiny
   bags, many certificates, many ContentInfos, deep indefinite nesting, long and
   nested OCTET STRING chains, unauthenticated ciphertext and 4 GiB length
-  claims, and bounds allocated bytes over input bytes. **Worst measured ratio:
-  8.6** (many small certificates, each one a parsed `*x509.Certificate`); it
-  does not grow with size.
+  claims, and bounds allocated bytes over input bytes: worst ratio 8.6 on
+  those, which are refused. A second set **decodes successfully**: certificates
+  of tiny names up to the cap, and a chain of them filling `MaxCertBytes`
+  (**worst ratio 36 of the file, 17.7 MB allocated for a 492 KB file**, the
+  cost of `crypto/x509` itself), and real RSA keys of 2048 and 4096 bits (17
+  at most, 63 KB). The tests assert the absolute bound too (64 x `MaxCertBytes`,
+  32 MiB for any file) and that the refusals above happen **before**
+  `crypto/x509` is called, by counting its calls.
 - **Fuzzing** (`FuzzDecode`, corpus committed in `testdata/fuzz`), 100 % block
   coverage, `mutsweep` with no survivor and no panic-only catch, `-race`,
   `govulncheck`, and the suite on amd64, arm64, 386, arm, riscv64 and s390x.

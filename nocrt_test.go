@@ -108,3 +108,20 @@ func TestWrongCRTValuesAreRefusedWhateverGODEBUG(t *testing.T) {
 	wantErr(t, err, ErrMalformed, "CRT")
 	c.want(t, 0, 0)
 }
+
+// wrongCRTKeys returns PKCS#8 keys with all-one, wrong Qinv, wrong Dp and wrong
+// Dq values, the seeds of FuzzDecode for pkcs12#2.
+func wrongCRTKeys(tb testing.TB) [][]byte {
+	k, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		tb.Fatal(err)
+	}
+	one := big.NewInt(1)
+	dp, dq, qinv := k.Precomputed.Dp, k.Precomputed.Dq, k.Precomputed.Qinv
+	return [][]byte{
+		wrongCRT(k, one, one, one),
+		wrongCRT(k, dp, dq, new(big.Int).Add(qinv, one)),
+		wrongCRT(k, new(big.Int).Add(dp, one), dq, qinv),
+		wrongCRT(k, dp, new(big.Int).Sub(dq, one), qinv),
+	}
+}

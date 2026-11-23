@@ -21,6 +21,9 @@ func FuzzDecode(f *testing.F) {
 	}
 	f.Add(goodFile(f, pw), pw, false, false)
 	f.Add(fileOf(pw, dataCI(certBagDER(mat.cert), keyBagDER(mat.p8))), pw, true, false)
+	for _, p8 := range wrongCRTKeys(f) { // pkcs12#2: all-one, wrong Qinv, Dp, Dq
+		f.Add(fileOf(pw, dataCI(certBagDER(mat.cert), keyBagDER(p8))), pw, true, false)
+	}
 	f.Add([]byte{}, "", false, false)
 	f.Add([]byte{0x30, 0x80, 0, 0}, "", true, true)
 

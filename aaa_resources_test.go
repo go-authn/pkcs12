@@ -358,11 +358,13 @@ func TestPreflightKey(t *testing.T) {
 		k    fakeRSA
 		want error // nil: accepted
 	}{
-		{"consistent numbers", baseRSA, nil},
+		// Sizes inside every bound but numbers that are not a key: the CRT check
+		// (pkcs12#2) refuses them, a real key is accepted in TestWrongCRTValues...
+		{"sizes within the bounds, CRT values not matching", baseRSA, ErrMalformed},
 		{"modulus over the cap", with(func(r *fakeRSA) { r.n = 65 }), ErrLimit},
-		{"factors as long as the modulus plus one bit", with(func(r *fakeRSA) { r.p = 33 }), nil},
+		{"factors as long as the modulus plus one bit", with(func(r *fakeRSA) { r.p = 33 }), ErrMalformed},
 		{"factors longer than the modulus allows", with(func(r *fakeRSA) { r.p, r.q = 33, 33 }), ErrMalformed},
-		{"private exponent as long as the modulus", baseRSA, nil},
+		{"private exponent as long as the modulus", baseRSA, ErrMalformed},
 		{"private exponent too long", with(func(r *fakeRSA) { r.d = 65 }), ErrMalformed},
 		{"dp too long", with(func(r *fakeRSA) { r.dp = 33 }), ErrMalformed},
 		{"dq too long", with(func(r *fakeRSA) { r.dq = 33 }), ErrMalformed},

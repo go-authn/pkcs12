@@ -75,6 +75,13 @@ keytool), but `crypto/x509` reads such a key and derives them with big-number
 arithmetic: 16.4 MB and 21 744 allocations at 8192 bits, against 0.36 MB and 618
 with them, which with the worst certificates exceeds the bound asserted below.
 
+**CRT values are verified, whatever `GODEBUG` says.** `Dp = D mod (P-1)`,
+`Dq = D mod (Q-1)` and `Qinv x Q = 1 mod P` are checked before `crypto/x509`
+sees the key; a mismatch is refused (`ErrMalformed`). Under
+`GODEBUG=x509rsacrt=0` the standard library drops wrong CRT values and derives
+them again, which stepped over the bound (39.4 MB, issue #2); the check costs a
+few big-integer reductions and does not depend on the setting.
+
 **Memory per request.** With the default options, a hostile file makes one
 `Decode` allocate about 25 MB (measured jointly, worst certificates and the
 largest accepted key, 8192 bits: 25.1 MB, of which about 20 MB stay live until

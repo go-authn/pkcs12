@@ -258,7 +258,12 @@ func TestEncryptionRefusals(t *testing.T) {
 	add("legacy zero iterations", legacyAlg(oidPBE3DES, salt, 0), lct, ErrMalformed, "iteration count 0")
 	add("legacy too many iterations", legacyAlg(oidPBE3DES, salt, 2_000_000), lct, ErrLimit, "iteration count")
 	add("legacy ciphertext cut", legacyAlg(oidPBE3DES, salt, 2), lct[:len(lct)-1], ErrMalformed, "whole number of blocks")
-	add("legacy bad padding", legacyAlg(oidPBE3DES, salt, 2), append([]byte{}, lct[:len(lct)-8]...), ErrMalformed, "padding")
+	// The cut leaves the block before the padding as the last one. With the
+	// random test key as plaintext its last byte was a valid padding length
+	// about one time in 256 (a CI failure on pkcs12#5): the plaintext is fixed,
+	// and ends in 0xaa, which no padding length can be.
+	fixed := sealLegacy(pw, salt, 2, bytes.Repeat([]byte{0xaa}, 8))
+	add("legacy bad padding", legacyAlg(oidPBE3DES, salt, 2), append([]byte{}, fixed[:len(fixed)-8]...), ErrMalformed, "padding")
 
 	runRefusals(t, cases)
 }

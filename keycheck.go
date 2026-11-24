@@ -70,6 +70,24 @@ func preflightKey(der []byte, maxBits int) error {
 		k.Dp.BitLen() > k.P.BitLen() || k.Dq.BitLen() > k.Q.BitLen() || k.Qinv.BitLen() > k.P.BitLen() {
 		return malformed("RSA private key: a number is longer than the modulus allows")
 	}
+	// The CRT values must be the ones RFC 8017 defines. With GODEBUG=x509rsacrt=0
+	// crypto/x509 (pkcs1.go) drops wrong CRT values and re-derives them, the cost
+	// the absence check above avoids; and the setting cannot be read reliably
+	// (//go:debug directives). Checking them here makes the bound independent of
+	// it: three reductions of at most n bits by n/2 bits, plus one product.
+	one := big.NewInt(1)
+	if k.P.Cmp(one) <= 0 || k.Q.Cmp(one) <= 0 {
+		return malformed("RSA private key: a prime factor is 1")
+	}
+	pm1 := new(big.Int).Sub(k.P, one)
+	qm1 := new(big.Int).Sub(k.Q, one)
+	qinv := new(big.Int).Mul(k.Qinv, k.Q)
+	qinv.Mod(qinv, k.P)
+	if new(big.Int).Mod(k.D, pm1).Cmp(k.Dp) != 0 ||
+		new(big.Int).Mod(k.D, qm1).Cmp(k.Dq) != 0 ||
+		qinv.Cmp(one) != 0 {
+		return malformed("RSA private key: CRT values do not match the key")
+	}
 	return nil
 }
 

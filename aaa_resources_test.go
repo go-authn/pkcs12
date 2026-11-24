@@ -358,11 +358,13 @@ func TestPreflightKey(t *testing.T) {
 		k    fakeRSA
 		want error // nil: accepted
 	}{
-		{"consistent numbers", baseRSA, nil},
+		// Sizes inside every bound but numbers that are not a key: the CRT check
+		// (pkcs12#2) refuses them, a real key is accepted in TestWrongCRTValues...
+		{"sizes within the bounds, CRT values not matching", baseRSA, ErrMalformed},
 		{"modulus over the cap", with(func(r *fakeRSA) { r.n = 65 }), ErrLimit},
-		{"factors as long as the modulus plus one bit", with(func(r *fakeRSA) { r.p = 33 }), nil},
+		{"factors as long as the modulus plus one bit", with(func(r *fakeRSA) { r.p = 33 }), ErrMalformed},
 		{"factors longer than the modulus allows", with(func(r *fakeRSA) { r.p, r.q = 33, 33 }), ErrMalformed},
-		{"private exponent as long as the modulus", baseRSA, nil},
+		{"private exponent as long as the modulus", baseRSA, ErrMalformed},
 		{"private exponent too long", with(func(r *fakeRSA) { r.d = 65 }), ErrMalformed},
 		{"dp too long", with(func(r *fakeRSA) { r.dp = 33 }), ErrMalformed},
 		{"dq too long", with(func(r *fakeRSA) { r.dq = 33 }), ErrMalformed},
@@ -469,5 +471,30 @@ func TestECAndEd25519KeysCostLittle(t *testing.T) {
 	t.Logf("Ed25519 file: alloc %d B", a)
 	if a > 512<<10 {
 		t.Errorf("Ed25519: alloc %d exceeds 512 KiB", a)
+	}
+}
+
+// The size bounds run BEFORE the CRT arithmetic, which would otherwise be the
+// expensive step: each refusal is told apart by its message, since the CRT
+// check also answers ErrMalformed.
+func TestPreflightKeyBoundsPrecedeTheCRTCheck(t *testing.T) {
+	material(t)
+	with := func(f func(*fakeRSA)) fakeRSA { r := baseRSA; f(&r); return r }
+	for _, c := range []struct {
+		name string
+		k    fakeRSA
+		msg  string
+	}{
+		{"factors too long", with(func(r *fakeRSA) { r.p, r.q = 33, 33 }), "longer than the modulus"},
+		{"exponent too long", with(func(r *fakeRSA) { r.d = 65 }), "longer than the modulus"},
+		{"dp too long", with(func(r *fakeRSA) { r.dp = 33 }), "longer than the modulus"},
+		{"dq too long", with(func(r *fakeRSA) { r.dq = 33 }), "longer than the modulus"},
+		{"qinv too long", with(func(r *fakeRSA) { r.qinv = 33 }), "longer than the modulus"},
+		{"a zero factor", with(func(r *fakeRSA) { r.p = 0 }), "not positive"},
+		{"a zero dp", with(func(r *fakeRSA) { r.dp = 0 }), "not positive"},
+		{"a factor of 1", fakeRSA{n: 64, p: 1, q: 32, d: 64, dp: 1, dq: 32, qinv: 1}, "prime factor is 1"},
+		{"mismatched CRT values", baseRSA, "CRT values do not match"},
+	} {
+		safely(t, func() { wantErr(t, preflightKey(c.k.p8(), 64), ErrMalformed, c.msg) })
 	}
 }
